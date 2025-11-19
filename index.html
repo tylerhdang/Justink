@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Links</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Custom Tailwind Colors -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: "#818cf8",
+            primaryFg: "#0f172a",
+            secondary: "#2d3748",
+            secondaryFg: "#d1d5db",
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- CSS Animations + Effects -->
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Scroll Reveal */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.6s ease-out;
+    }
+
+    .fade-up.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Link Tilt Holder */
+    .tilt-item {
+      transform-style: preserve-3d;
+      transition: transform 150ms ease-out;
+    }
+
+    /* Glitch Name */
+    .glitch {
+      position: relative;
+      text-shadow: 0 0 2px #818cf8;
+    }
+
+    .glitch::before,
+    .glitch::after {
+      content: attr(data-text);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      opacity: 0.7;
+      overflow: hidden;
+    }
+
+    .glitch::before {
+      color: #818cf8;
+      animation: glitchTop 2s infinite linear alternate-reverse;
+    }
+
+    .glitch::after {
+      color: #2d3748;
+      animation: glitchBottom 2s infinite linear alternate-reverse;
+    }
+
+    @keyframes glitchTop {
+      0% {
+        clip-path: inset(0 0 90% 0);
+        transform: translate(-2px, -2px);
+      }
+      50% {
+        clip-path: inset(0 0 10% 0);
+        transform: translate(2px, 2px);
+      }
+      100% {
+        clip-path: inset(0 0 50% 0);
+        transform: translate(-1px, 1px);
+      }
+    }
+
+    @keyframes glitchBottom {
+      0% {
+        clip-path: inset(90% 0 0 0);
+        transform: translate(2px, 2px);
+      }
+      50% {
+        clip-path: inset(10% 0 0 0);
+        transform: translate(-2px, -2px);
+      }
+      100% {
+        clip-path: inset(40% 0 0 0);
+        transform: translate(1px, -1px);
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-secondary text-primaryFg min-h-screen flex justify-center py-10">
+
+  <div class="w-full flex justify-center px-4">
+    <div class="relative w-full max-w-md">
+
+      <!-- Desktop outer frame -->
+      <div class="hidden md:block absolute inset-0 
+                  bg-secondary/60 backdrop-blur-md
+                  border border-primary/20 
+                  rounded-3xl shadow-2xl">
+      </div>
+
+      <!-- Main Content -->
+      <main id="card" class="relative p-6 text-center">
+
+        <!-- Avatar -->
+        <img src="your-photo.jpg"
+             class="fade-up w-28 h-28 mx-auto rounded-full object-cover shadow-xl mb-4" />
+
+        <!-- Name -->
+        <h1 class="fade-up text-3xl font-black glitch" data-text="Your Name">
+          Your Name
+        </h1>
+
+        <!-- Bio -->
+        <p class="fade-up mt-2 text-secondaryFg text-sm">
+          A short bio about you, your work or brand.
+        </p>
+
+        <!-- Dynamic Links -->
+        <div id="links" class="mt-6 space-y-4"></div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    /* Add LOTS OF LINKS for scroll testing */
+    const linksData = [
+      { name: "Instagram", url: "https://instagram.com" },
+      { name: "YouTube", url: "https://youtube.com" },
+      { name: "Portfolio", url: "#" },
+      { name: "Contact", url: "mailto:email@example.com" },
+      { name: "Twitter", url: "https://twitter.com" },
+      { name: "LinkedIn", url: "https://linkedin.com" },
+      { name: "GitHub", url: "https://github.com" },
+      { name: "Discord", url: "#" },
+      { name: "Store", url: "#" },
+      { name: "Blog", url: "#" },
+      { name: "Newsletter", url: "#" }
+    ];
+
+    const linksContainer = document.getElementById("links");
+
+    linksData.forEach((link) => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "tilt-item fade-up";
+
+      const el = document.createElement("a");
+      el.href = link.url;
+      el.target = "_blank";
+
+      el.className =
+        "block w-full py-4 rounded-xl bg-primary text-primaryFg font-semibold " +
+        "shadow-lg hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.03] " +
+        "active:scale-[0.97] transition-all duration-200";
+
+      el.textContent = link.name;
+
+      wrapper.appendChild(el);
+      linksContainer.appendChild(wrapper);
+    });
+
+    /* Scroll Reveal */
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) entry.target.classList.add("show");
+        });
+      },
+      { threshold: 0.2 }
+    );
+
+    document.querySelectorAll(".fade-up").forEach((el) => observer.observe(el));
+
+    /* Tilt Effect only on link wrappers */
+    document.querySelectorAll(".tilt-item").forEach((item) => {
+      item.addEventListener("mousemove", (e) => {
+        const rect = item.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        item.style.transform = `rotateX(${(-y / 25)}deg) rotateY(${x / 25}deg)`;
+      });
+
+      item.addEventListener("mouseleave", () => {
+        item.style.transform = "rotateX(0deg) rotateY(0deg)";
+      });
+    });
+  </script>
+
+</body>
+
+</html>
