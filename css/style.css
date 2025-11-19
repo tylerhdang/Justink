@@ -1,0 +1,78 @@
+html {
+  scroll-behavior: smooth;
+}
+
+/* Scroll Reveal */
+.fade-up {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s ease-out;
+}
+
+.fade-up.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Link Tilt Holder */
+.tilt-item {
+  transform-style: preserve-3d;
+  transition: transform 150ms ease-out;
+}
+
+/* Glitch Name */
+.glitch {
+  position: relative;
+  text-shadow: 0 0 2px #818cf8;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  opacity: 0.7;
+  overflow: hidden;
+}
+
+.glitch::before {
+  color: #818cf8;
+  animation: glitchTop 2s infinite linear alternate-reverse;
+}
+
+.glitch::after {
+  color: #2d3748;
+  animation: glitchBottom 2s infinite linear alternate-reverse;
+}
+
+@keyframes glitchTop {
+  0% {
+    clip-path: inset(0 0 90% 0);
+    transform: translate(-2px, -2px);
+  }
+  50% {
+    clip-path: inset(0 0 10% 0);
+    transform: translate(2px, 2px);
+  }
+  100% {
+    clip-path: inset(0 0 50% 0);
+    transform: translate(-1px, 1px);
+  }
+}
+
+@keyframes glitchBottom {
+  0% {
+    clip-path: inset(90% 0 0 0);
+    transform: translate(2px, 2px);
+  }
+  50% {
+    clip-path: inset(10% 0 0 0);
+    transform: translate(-2px, -2px);
+  }
+  100% {
+    clip-path: inset(40% 0 0 0);
+    transform: translate(1px, -1px);
+  }
+}
