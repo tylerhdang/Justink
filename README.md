@@ -1,1 +1,3 @@
-##THIS PROJECT IS CURRENTLY UNDER WORK
+# Justink
+
+**This project is currently a work in progress.**
