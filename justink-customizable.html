@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Justink - Customizable Links</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Fade Up Animation */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.6s ease-out;
+    }
+    .fade-up.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Slide In Animation */
+    .slide-in {
+      opacity: 0;
+      transform: translateX(-30px);
+      transition: all 0.6s ease-out;
+    }
+    .slide-in.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* Scale Animation */
+    .scale-in {
+      opacity: 0;
+      transform: scale(0.8);
+      transition: all 0.6s ease-out;
+    }
+    .scale-in.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* No Animation */
+    .no-anim {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* Tilt Effect */
+    .tilt-item {
+      transform-style: preserve-3d;
+      transition: transform 150ms ease-out;
+    }
+
+    /* Glitch Effect */
+    .glitch {
+      position: relative;
+    }
+    .glitch::before,
+    .glitch::after {
+      content: attr(data-text);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      opacity: 0.7;
+      overflow: hidden;
+    }
+    .glitch::before {
+      animation: glitchTop 2s infinite linear alternate-reverse;
+    }
+    .glitch::after {
+      animation: glitchBottom 2s infinite linear alternate-reverse;
+    }
+
+    @keyframes glitchTop {
+      0% { clip-path: inset(0 0 90% 0); transform: translate(-2px, -2px); }
+      50% { clip-path: inset(0 0 10% 0); transform: translate(2px, 2px); }
+      100% { clip-path: inset(0 0 50% 0); transform: translate(-1px, 1px); }
+    }
+    @keyframes glitchBottom {
+      0% { clip-path: inset(90% 0 0 0); transform: translate(2px, 2px); }
+      50% { clip-path: inset(10% 0 0 0); transform: translate(-2px, -2px); }
+      100% { clip-path: inset(40% 0 0 0); transform: translate(1px, -1px); }
+    }
+
+    /* Settings Panel */
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      right: -450px;
+      width: 450px;
+      height: 100vh;
+      background: #1e293b;
+      box-shadow: -4px 0 20px rgba(0,0,0,0.3);
+      transition: right 0.3s ease;
+      z-index: 1000;
+      overflow-y: auto;
+    }
+    .settings-panel.open {
+      right: 0;
+    }
+
+    /* Color Picker Styling */
+    input[type="color"] {
+      width: 60px;
+      height: 40px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    /* Gradient Preview */
+    .gradient-preview {
+      height: 60px;
+      border-radius: 8px;
+      margin-top: 8px;
+    }
+
+    /* Link Item in Settings */
+    .link-item {
+      background: #334155;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    /* Tab Styling */
+    .tab-btn {
+      padding: 8px 16px;
+      background: #334155;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: #475569;
+      color: white;
+      font-weight: 600;
+    }
+
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+
+<body id="mainBody" class="min-h-screen flex justify-center py-10 transition-colors duration-300">
+  
+  <!-- Settings Toggle Button -->
+  <button id="settingsToggle" class="fixed top-4 right-4 z-50 bg-indigo-500 text-white p-3 rounded-full shadow-lg hover:bg-indigo-600 transition">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  </button>
+
+  <!-- Settings Panel -->
+  <div id="settingsPanel" class="settings-panel">
+    <div class="p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-white">Customize Justink</h2>
+        <button id="closeSettings" class="text-gray-400 hover:text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex gap-1 mb-6 bg-slate-800 rounded-lg p-1">
+        <button class="tab-btn active flex-1 rounded" data-tab="profile">Profile</button>
+        <button class="tab-btn flex-1 rounded" data-tab="links">Links</button>
+        <button class="tab-btn flex-1 rounded" data-tab="design">Design</button>
+        <button class="tab-btn flex-1 rounded" data-tab="export">Save</button>
+      </div>
+
+      <!-- Profile Tab -->
+      <div id="profileTab" class="tab-content active">
+        <h3 class="text-lg font-semibold text-white mb-3">Profile Information</h3>
+        
+        <label class="block text-sm text-gray-300 mb-2">Profile Picture</label>
+        <div class="mb-3">
+          <div class="flex items-center gap-3 mb-2">
+            <img id="previewImage" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Justink" 
+                 class="w-16 h-16 rounded-full object-cover border-2 border-gray-600" 
+                 alt="Preview" />
+            <div class="flex-1">
+              <button id="uploadPicBtn" class="w-full p-2 bg-gray-600 hover:bg-gray-500 text-white rounded mb-1 text-sm">
+                📁 Upload from Device
+              </button>
+              <input type="file" id="profilePicFile" accept="image/*" class="hidden" />
+              <p class="text-xs text-gray-400">Or enter URL below</p>
+            </div>
+          </div>
+          <input type="text" id="profilePic" class="w-full p-2 rounded bg-gray-700 text-white text-sm" placeholder="https://example.com/image.jpg" />
+        </div>
+        
+        <label class="block text-sm text-gray-300 mb-2">Name</label>
+        <input type="text" id="profileName" class="w-full p-2 rounded bg-gray-700 text-white mb-3" placeholder="Your Name" />
+        
+        <label class="block text-sm text-gray-300 mb-2">Bio</label>
+        <textarea id="profileBio" class="w-full p-2 rounded bg-gray-700 text-white mb-3" rows="3" placeholder="A short bio about yourself..."></textarea>
+
+        <button id="applyProfile" class="w-full p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded">
+          Apply Changes
+        </button>
+      </div>
+
+      <!-- Links Tab -->
+      <div id="linksTab" class="tab-content">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="text-lg font-semibold text-white">Your Links</h3>
+          <button id="addLink" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded">
+            + Add Link
+          </button>
+        </div>
+        
+        <div id="linksList" class="space-y-2 mb-4"></div>
+      </div>
+
+      <!-- Design Tab -->
+      <div id="designTab" class="tab-content">
+        <!-- Background Settings -->
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold text-white mb-3">Background</h3>
+          
+          <label class="block text-sm text-gray-300 mb-2">Background Type</label>
+          <select id="bgType" class="w-full p-2 rounded bg-gray-700 text-white mb-3">
+            <option value="solid">Solid Color</option>
+            <option value="gradient">Gradient</option>
+          </select>
+
+          <div id="solidBgControls">
+            <label class="block text-sm text-gray-300 mb-2">Background Color</label>
+            <input type="color" id="bgColor" value="#2d3748" />
+          </div>
+
+          <div id="gradientControls" class="hidden">
+            <label class="block text-sm text-gray-300 mb-2">Gradient Color 1</label>
+            <input type="color" id="gradientColor1" value="#667eea" class="mb-3" />
+            
+            <label class="block text-sm text-gray-300 mb-2">Gradient Color 2</label>
+            <input type="color" id="gradientColor2" value="#764ba2" class="mb-3" />
+            
+            <label class="block text-sm text-gray-300 mb-2">Gradient Direction</label>
+            <select id="gradientDir" class="w-full p-2 rounded bg-gray-700 text-white">
+              <option value="to right">Left to Right</option>
+              <option value="to left">Right to Left</option>
+              <option value="to bottom">Top to Bottom</option>
+              <option value="to top">Bottom to Top</option>
+              <option value="to bottom right">Diagonal ↘</option>
+              <option value="to top right">Diagonal ↗</option>
+            </select>
+            
+            <div class="gradient-preview" id="gradientPreview"></div>
+          </div>
+        </div>
+
+        <!-- Text Color -->
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold text-white mb-3">Text</h3>
+          <label class="block text-sm text-gray-300 mb-2">Text Color</label>
+          <input type="color" id="textColor" value="#f3f4f6" />
+        </div>
+
+        <!-- Button Settings -->
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold text-white mb-3">Buttons</h3>
+          
+          <label class="block text-sm text-gray-300 mb-2">Button Color</label>
+          <input type="color" id="btnColor" value="#818cf8" class="mb-3" />
+          
+          <label class="block text-sm text-gray-300 mb-2">Button Text Color</label>
+          <input type="color" id="btnTextColor" value="#0f172a" />
+        </div>
+
+        <!-- Animation Settings -->
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold text-white mb-3">Animations</h3>
+          
+          <label class="block text-sm text-gray-300 mb-2">Animation Style</label>
+          <select id="animStyle" class="w-full p-2 rounded bg-gray-700 text-white mb-3">
+            <option value="fade-up">Fade Up</option>
+            <option value="slide-in">Slide In</option>
+            <option value="scale-in">Scale In</option>
+            <option value="no-anim">No Animation</option>
+          </select>
+
+          <label class="flex items-center text-sm text-gray-300 mb-2">
+            <input type="checkbox" id="enableTilt" checked class="mr-2" />
+            Enable Tilt Effect on Hover
+          </label>
+
+          <label class="flex items-center text-sm text-gray-300">
+            <input type="checkbox" id="enableGlitch" checked class="mr-2" />
+            Enable Glitch Effect on Name
+          </label>
+        </div>
+      </div>
+
+      <!-- Export Tab -->
+      <div id="exportTab" class="tab-content">
+        <h3 class="text-lg font-semibold text-white mb-3">Save/Load Configuration</h3>
+        
+        <button id="exportConfig" class="w-full p-3 bg-green-600 hover:bg-green-700 text-white rounded mb-3">
+          📥 Export Configuration
+        </button>
+        
+        <button id="importConfig" class="w-full p-3 bg-blue-600 hover:bg-blue-700 text-white rounded mb-3">
+          📤 Import Configuration
+        </button>
+        <input type="file" id="fileInput" accept=".json" class="hidden" />
+        
+        <button id="resetConfig" class="w-full p-3 bg-red-600 hover:bg-red-700 text-white rounded">
+          🔄 Reset to Defaults
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="w-full flex justify-center px-4">
+    <div class="relative w-full max-w-md">
+      <div class="hidden md:block absolute inset-0 backdrop-blur-md border border-white/10 rounded-3xl shadow-2xl" id="cardBg"></div>
+
+      <main id="card" class="relative p-6 text-center">
+        <img id="profileImage" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Justink" 
+             class="anim-element w-28 h-28 mx-auto rounded-full object-cover shadow-xl mb-4" 
+             alt="Profile Picture" />
+
+        <h1 id="nameTitle" class="anim-element text-3xl font-black" data-text="Your Name">
+          Your Name
+        </h1>
+
+        <p id="description" class="anim-element mt-2 text-sm opacity-80">
+          Justink, the completely free and open-source LinkTree alternative.
+        </p>
+
+        <div id="links" class="mt-6 space-y-4"></div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // Default Configuration
+    const defaultConfig = {
+      profile: {
+        name: 'Your Name',
+        bio: 'Justink, the completely free and open-source LinkTree alternative.',
+        picture: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Justink'
+      },
+      links: [
+        { id: 1, name: "Instagram", url: "https://instagram.com" },
+        { id: 2, name: "YouTube", url: "https://youtube.com" },
+        { id: 3, name: "Portfolio", url: "#" },
+        { id: 4, name: "Contact", url: "mailto:email@example.com" }
+      ],
+      design: {
+        bgType: 'solid',
+        bgColor: '#2d3748',
+        gradientColor1: '#667eea',
+        gradientColor2: '#764ba2',
+        gradientDir: 'to right',
+        textColor: '#f3f4f6',
+        btnColor: '#818cf8',
+        btnTextColor: '#0f172a',
+        animStyle: 'fade-up',
+        enableTilt: true,
+        enableGlitch: true
+      }
+    };
+
+    // Load config from memory or use defaults
+    let config = JSON.parse(JSON.stringify(defaultConfig));
+    let nextLinkId = 5;
+
+    // DOM Elements
+    const settingsToggle = document.getElementById('settingsToggle');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const closeSettings = document.getElementById('closeSettings');
+    const mainBody = document.getElementById('mainBody');
+    const linksContainer = document.getElementById('links');
+    const nameTitle = document.getElementById('nameTitle');
+    const profileImage = document.getElementById('profileImage');
+    const description = document.getElementById('description');
+
+    // Tab Switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab + 'Tab').classList.add('active');
+      });
+    });
+
+    // Settings Panel Toggle
+    settingsToggle.addEventListener('click', () => {
+      settingsPanel.classList.add('open');
+    });
+
+    closeSettings.addEventListener('click', () => {
+      settingsPanel.classList.remove('open');
+    });
+
+    // Apply Profile Changes
+    document.getElementById('applyProfile').addEventListener('click', () => {
+      config.profile.name = document.getElementById('profileName').value;
+      config.profile.bio = document.getElementById('profileBio').value;
+      config.profile.picture = document.getElementById('profilePic').value;
+      applyProfile();
+    });
+
+    // Apply Profile
+    function applyProfile() {
+      nameTitle.textContent = config.profile.name;
+      nameTitle.setAttribute('data-text', config.profile.name);
+      description.textContent = config.profile.bio;
+      profileImage.src = config.profile.picture;
+    }
+
+    // Render Links in Settings
+    function renderLinksList() {
+      const linksList = document.getElementById('linksList');
+      linksList.innerHTML = '';
+
+      config.links.forEach((link, index) => {
+        const linkItem = document.createElement('div');
+        linkItem.className = 'link-item';
+        linkItem.innerHTML = `
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-white font-medium text-sm">Link ${index + 1}</span>
+            <button class="text-red-400 hover:text-red-300 text-sm" onclick="removeLink(${link.id})">
+              🗑️ Remove
+            </button>
+          </div>
+          <input type="text" value="${link.name}" 
+                 class="w-full p-2 rounded bg-gray-600 text-white mb-2 text-sm" 
+                 onchange="updateLink(${link.id}, 'name', this.value)" 
+                 placeholder="Link Name" />
+          <input type="text" value="${link.url}" 
+                 class="w-full p-2 rounded bg-gray-600 text-white text-sm" 
+                 onchange="updateLink(${link.id}, 'url', this.value)" 
+                 placeholder="https://example.com" />
+        `;
+        linksList.appendChild(linkItem);
+      });
+    }
+
+    // Add Link
+    document.getElementById('addLink').addEventListener('click', () => {
+      config.links.push({
+        id: nextLinkId++,
+        name: 'New Link',
+        url: 'https://example.com'
+      });
+      renderLinksList();
+      renderLinks();
+    });
+
+    // Update Link
+    window.updateLink = function(id, field, value) {
+      const link = config.links.find(l => l.id === id);
+      if (link) {
+        link[field] = value;
+        renderLinks();
+      }
+    };
+
+    // Remove Link
+    window.removeLink = function(id) {
+      config.links = config.links.filter(l => l.id !== id);
+      renderLinksList();
+      renderLinks();
+    };
+
+    // Apply Design Configuration
+    function applyDesign() {
+      const design = config.design;
+
+      // Background
+      if (design.bgType === 'solid') {
+        mainBody.style.background = design.bgColor;
+      } else {
+        mainBody.style.background = `linear-gradient(${design.gradientDir}, ${design.gradientColor1}, ${design.gradientColor2})`;
+      }
+
+      // Text Colors
+      description.style.color = design.textColor;
+      nameTitle.style.color = design.textColor;
+
+      // Glitch Effect
+      if (design.enableGlitch) {
+        nameTitle.classList.add('glitch');
+      } else {
+        nameTitle.classList.remove('glitch');
+      }
+
+      // Update all links
+      renderLinks();
+    }
+
+    // Render Links on Page
+    function renderLinks() {
+      linksContainer.innerHTML = '';
+      
+      config.links.forEach((link) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = config.design.enableTilt ? 'tilt-item anim-element' : 'anim-element';
+        wrapper.classList.add(config.design.animStyle);
+
+        const el = document.createElement('a');
+        el.href = link.url;
+        el.target = '_blank';
+        el.className = 'block w-full py-4 rounded-xl font-semibold shadow-lg hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.03] active:scale-[0.97] transition-all duration-200';
+        el.style.backgroundColor = config.design.btnColor;
+        el.style.color = config.design.btnTextColor;
+        el.textContent = link.name;
+
+        wrapper.appendChild(el);
+        linksContainer.appendChild(wrapper);
+      });
+
+      // Reinitialize observers and tilt
+      setTimeout(() => {
+        initAnimations();
+        if (config.design.enableTilt) {
+          initTilt();
+        }
+      }, 50);
+    }
+
+    // Initialize Scroll Animations
+    function initAnimations() {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('show');
+            }
+          });
+        },
+        { threshold: 0.2 }
+      );
+
+      document.querySelectorAll('.anim-element').forEach((el) => {
+        el.classList.remove('show');
+        observer.observe(el);
+      });
+    }
+
+    // Initialize Tilt Effect
+    function initTilt() {
+      document.querySelectorAll('.tilt-item').forEach((item) => {
+        item.addEventListener('mousemove', (e) => {
+          const rect = item.getBoundingClientRect();
+          const x = e.clientX - rect.left - rect.width / 2;
+          const y = e.clientY - rect.top - rect.height / 2;
+          item.style.transform = `rotateX(${(-y / 25)}deg) rotateY(${x / 25}deg)`;
+        });
+
+        item.addEventListener('mouseleave', () => {
+          item.style.transform = 'rotateX(0deg) rotateY(0deg)';
+        });
+      });
+    }
+
+    // Update Gradient Preview
+    function updateGradientPreview() {
+      const preview = document.getElementById('gradientPreview');
+      const dir = document.getElementById('gradientDir').value;
+      const c1 = document.getElementById('gradientColor1').value;
+      const c2 = document.getElementById('gradientColor2').value;
+      preview.style.background = `linear-gradient(${dir}, ${c1}, ${c2})`;
+    }
+
+    // Design Settings Event Listeners
+    document.getElementById('bgType').addEventListener('change', (e) => {
+      config.design.bgType = e.target.value;
+      document.getElementById('solidBgControls').classList.toggle('hidden', config.design.bgType !== 'solid');
+      document.getElementById('gradientControls').classList.toggle('hidden', config.design.bgType !== 'gradient');
+      applyDesign();
+    });
+
+    document.getElementById('bgColor').addEventListener('input', (e) => {
+      config.design.bgColor = e.target.value;
+      applyDesign();
+    });
+
+    document.getElementById('gradientColor1').addEventListener('input', (e) => {
+      config.design.gradientColor1 = e.target.value;
+      updateGradientPreview();
+      applyDesign();
+    });
+
+    document.getElementById('gradientColor2').addEventListener('input', (e) => {
+      config.design.gradientColor2 = e.target.value;
+      updateGradientPreview();
+      applyDesign();
+    });
+
+    document.getElementById('gradientDir').addEventListener('change', (e) => {
+      config.design.gradientDir = e.target.value;
+      updateGradientPreview();
+      applyDesign();
+    });
+
+    document.getElementById('textColor').addEventListener('input', (e) => {
+      config.design.textColor = e.target.value;
+      applyDesign();
+    });
+
+    document.getElementById('btnColor').addEventListener('input', (e) => {
+      config.design.btnColor = e.target.value;
+      applyDesign();
+    });
+
+    document.getElementById('btnTextColor').addEventListener('input', (e) => {
+      config.design.btnTextColor = e.target.value;
+      applyDesign();
+    });
+
+    document.getElementById('animStyle').addEventListener('change', (e) => {
+      config.design.animStyle = e.target.value;
+      applyDesign();
+    });
+
+    document.getElementById('enableTilt').addEventListener('change', (e) => {
+      config.design.enableTilt = e.target.checked;
+      applyDesign();
+    });
+
+    document.getElementById('enableGlitch').addEventListener('change', (e) => {
+      config.design.enableGlitch = e.target.checked;
+      applyDesign();
+    });
+
+    // Export Configuration
+    document.getElementById('exportConfig').addEventListener('click', () => {
+      const json = JSON.stringify(config, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'justink-config.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Import Configuration
+    document.getElementById('importConfig').addEventListener('click', () => {
+      document.getElementById('fileInput').click();
+    });
+
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            config = JSON.parse(event.target.result);
+            loadConfigToUI();
+            applyProfile();
+            applyDesign();
+            renderLinksList();
+            alert('Configuration imported successfully!');
+          } catch (error) {
+            alert('Invalid configuration file');
+          }
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    // Reset Configuration
+    document.getElementById('resetConfig').addEventListener('click', () => {
+      if (confirm('Reset to default configuration? This will clear all your customizations.')) {
+        config = JSON.parse(JSON.stringify(defaultConfig));
+        loadConfigToUI();
+        applyProfile();
+        applyDesign();
+        renderLinksList();
+      }
+    });
+
+    // Load Config to UI
+    function loadConfigToUI() {
+      // Profile
+      document.getElementById('profileName').value = config.profile.name;
+      document.getElementById('profileBio').value = config.profile.bio;
+      document.getElementById('profilePic').value = config.profile.picture;
+
+      // Design
+      document.getElementById('bgType').value = config.design.bgType;
+      document.getElementById('bgColor').value = config.design.bgColor;
+      document.getElementById('gradientColor1').value = config.design.gradientColor1;
+      document.getElementById('gradientColor2').value = config.design.gradientColor2;
+      document.getElementById('gradientDir').value = config.design.gradientDir;
+      document.getElementById('textColor').value = config.design.textColor;
+      document.getElementById('btnColor').value = config.design.btnColor;
+      document.getElementById('btnTextColor').value = config.design.btnTextColor;
+      document.getElementById('animStyle').value = config.design.animStyle;
+      document.getElementById('enableTilt').checked = config.design.enableTilt;
+      document.getElementById('enableGlitch').checked = config.design.enableGlitch;
+
+      document.getElementById('solidBgControls').classList.toggle('hidden', config.design.bgType !== 'solid');
+      document.getElementById('gradientControls').classList.toggle('hidden', config.design.bgType !== 'gradient');
+      updateGradientPreview();
+    }
+
+    // Initialize
+    loadConfigToUI();
+    applyProfile();
+    applyDesign();
+    renderLinksList();
+  </script>
+</body>
+</html>
